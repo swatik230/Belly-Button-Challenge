@@ -64,6 +64,6 @@ Update all the plots when a new sample is selected. Additionally, you are welcom
 ![image](https://github.com/swatik230/Belly-Button-Challenge/assets/88855120/36e44c7b-747d-4cd6-b961-c0e9e0bbecf7)
 
 
-![image](https://github.com/swatik230/Belly-Button-Challenge/assets/88855120/c1518220-cd12-451b-b54b-d43d3248655e)
+
 
 Deploy your app to a free static page hosting service, such as GitHub Pages. Submit the links to your deployment and your GitHub repo. Ensure that your repository has regular commits and a thorough README.md file
