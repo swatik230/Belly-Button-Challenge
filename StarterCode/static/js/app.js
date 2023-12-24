@@ -1,189 +1,124 @@
-// Place url in a constant variable
-const url = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json"
+// store URL in variable
+const url = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json";
 
-// Fetch the JSON data and console log it
-d3.json(url).then(function(data) {
-  console.log(data);
-});
+function init(){ 
 
-// Initialize the dashboard at start up 
-function init() {
+    // fetch the json data and console log it
+    d3.json(url).then(function(alldata){
 
-    // Use D3 to select the dropdown menu
-    let dropdownMenu = d3.select("#selDataset");
+        // Use D3 to select the dropdown menu
+        let dropdownMenu = d3.select("#selDataset");
 
-    // Use D3 to get sample names and populate the drop-down selector
-    d3.json(url).then((data) => {
-        
-        // Set a variable for the sample names
-        let names = data.names;
+        // getting all names from json
+        let names = alldata.names;
 
-        // Add  samples to dropdown menu
-        names.forEach((id) => {
-
-            // Log the value of id for each iteration of the loop
-            console.log(id);
-
-            dropdownMenu.append("option")
-            .text(id)
-            .property("value",id);
+        // getting dropdown 
+        names.forEach(function(id){
+            dropdownMenu.append("option").text(id).property("value");
         });
+       
+        // pass first subject and call the functions
+        chartvalues(names[0]);
+        metadata(names[0]);
+    });
+};
+// function when the subject id changes
+function optionChanged(passedvalue) {
 
-        // Set the first sample from the list
-        let sample_one = names[0];
+    chartvalues(passedvalue);
+    metadata(passedvalue);
+};
+// function to 
+function chartvalues(passedvalue){
 
-        // Log the value of sample_one
-        console.log(sample_one);
+    // json data
+    d3.json(url).then(function(alldata){
 
-        // Build the initial plots
-        buildMetadata(sample_one);
-        buildBarChart(sample_one);
-        buildBubbleChart(sample_one);
-        buildGaugeChart(sample_one);
+        // retrieve all samples data
+        let samples = alldata.samples;
+
+        // filter for each option/subject selected
+        let id = samples.filter(take=>take.id == passedvalue);
+
+        // get data for all charts
+        let sample_values = id[0].sample_values; 
+        let otu_ids = id[0].otu_ids; 
+        let otu_labels = id[0].otu_labels; 
+
+        // call function
+        charts(sample_values, otu_ids, otu_labels);
 
     });
 };
+// function that displays the bar and bubble charts
+function charts(sample_values, otu_ids, otu_labels){
 
-// Function that populates metadata info
-function buildMetadata(sample) {
+    // json data
+    d3.json(url).then(function(alldata){
+                
+        // data for bar chart
+        let bar_data = [{
+            type: 'bar',
+            x: sample_values.slice(0,10).reverse(),
+            y: otu_ids.slice(0,10).map(id => `OTU ${id}`).reverse(),
+            text: otu_labels,
+            orientation: 'h'
+        }];
 
-    // Use D3 to retrieve all of the data
-    d3.json(url).then((data) => {
-
-        // Retrieve all metadata
-        let metadata = data.metadata;
-
-        // Filter based on the value of the sample
-        let value = metadata.filter(result => result.id == sample);
-
-        // Log the array of metadata objects after the have been filtered
-        console.log(value)
-
-        // Get the first index from the array
-        let valueData = value[0];
-
-        // Clear out metadata
-        d3.select("#sample-metadata").html("");
-
-        // Use Object.entries to add each key/value pair to the panel
-        Object.entries(valueData).forEach(([key,value]) => {
-
-            // Log the individual key/value pairs as they are being appended to the metadata panel
-            console.log(key,value);
-
-            d3.select("#sample-metadata").append("h5").text(`${key}: ${value}`);
-        });
-    });
-
-};
-
-// Function that builds the bar chart
-function buildBarChart(sample) {
-
-    // Use D3 to retrieve all of the data
-    d3.json(url).then((data) => {
-
-        // Retrieve all sample data
-        let sampleInfo = data.samples;
-
-        // Filter based on the value of the sample
-        let value = sampleInfo.filter(result => result.id == sample);
-
-        // Get the first index from the array
-        let valueData = value[0];
-
-        // Get the otu_ids, lables, and sample values
-        let otu_ids = valueData.otu_ids;
-        let otu_labels = valueData.otu_labels;
-        let sample_values = valueData.sample_values;
-
-        // Log the data to the console
-        console.log(otu_ids,otu_labels,sample_values);
-
-        // Set top ten items to display in descending order
-        let yticks = otu_ids.slice(0,10).map(id => `OTU ${id}`).reverse();
-        let xticks = sample_values.slice(0,10).reverse();
-        let labels = otu_labels.slice(0,10).reverse();
-        
-        // Set up the trace for the bar chart
-        let trace = {
-            x: xticks,
-            y: yticks,
-            text: labels,
-            type: "bar",
-            orientation: "h"
-        };
-
-        // Setup the layout
-        let layout = {
-            title: "Top 10 OTUs Present"
-        };
-
-        // Call Plotly to plot the bar chart
-        Plotly.newPlot("bar", [trace], layout)
-    });
-};
-
-// Function that builds the bubble chart
-function buildBubbleChart(sample) {
-
-    // Use D3 to retrieve all of the data
-    d3.json(url).then((data) => {
-        
-        // Retrieve all sample data
-        let sampleInfo = data.samples;
-
-        // Filter based on the value of the sample
-        let value = sampleInfo.filter(result => result.id == sample);
-
-        // Get the first index from the array
-        let valueData = value[0];
-
-        // Get the otu_ids, lables, and sample values
-        let otu_ids = valueData.otu_ids;
-        let otu_labels = valueData.otu_labels;
-        let sample_values = valueData.sample_values;
-
-        // Log the data to the console
-        console.log(otu_ids,otu_labels,sample_values);
-        
-        // Set up the trace for bubble chart
-        let trace1 = {
+        // data for bubble chart
+        let bubble_data = [{
             x: otu_ids,
             y: sample_values,
             text: otu_labels,
-            mode: "markers",
-            marker: {
-                size: sample_values,
+            mode: 'markers',
+            marker:{
                 color: otu_ids,
-                colorscale: "Earth"
+                colorscale: 'Earth',
+                size: sample_values
             }
+        }];
+    
+        // layout for bar chart
+        let bar_layout = {
+            title: 'Bar Chart',
+            height: 500,
+            width: 400            
+        };    
+
+        // layout for bubble chart
+        let bubble_layout = {
+            title: 'Bubble Chart',
+            height: 550,
+            width: 1000 
         };
 
-        // Set up the layout
-        let layout = {
-            title: "Bacteria Per Sample",
-            hovermode: "closest",
-            xaxis: {title: "OTU ID"},
-        };
+        // display bar chart
+        Plotly.newPlot('bar', bar_data, bar_layout);
 
-        // Call Plotly to plot the bubble chart
-        Plotly.newPlot("bubble", [trace1], layout)
+        // display bubble chart
+        Plotly.newPlot('bubble', bubble_data, bubble_layout);
+
     });
 };
+function metadata(passedvalue){
 
-// Function that updates dashboard when sample is changed
-function optionChanged(value) { 
+    // json data
+    d3.json(url).then(function(alldata){
 
-    // Log the new value
-    console.log(value); 
+        // retrieve all samples data
+        let samples = alldata.metadata;
 
-    // Call all functions 
-    buildMetadata(value);
-    buildBarChart(value);
-    buildBubbleChart(value);
-    buildGaugeChart(value);
+        // filter data from metadata
+        let id = samples.filter(take=>take.id == passedvalue);
+
+        let sample_metadata = d3.select('#sample-metadata').html('');
+
+        // using array method to iterate through the values
+        Object.entries(id[0]).forEach(([key, value]) => {
+            
+            // display information in demographic info chart/table
+            sample_metadata.append("h5").text(`${key}: ${value}`);
+        });
+    });
 };
-
-// Call the initialize function
 init();
